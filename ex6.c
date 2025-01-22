@@ -380,6 +380,11 @@ void postOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
  * Why we made it: We store pointers to PokemonNodes for alphabetical sorting.
  */
 void initNodeArray(NodeArray *na, int cap) {
+    if (na == NULL || cap < 1)
+        return;
+	na->nodes = calloc(cap, sizeof(PokemonNode*));
+    na->capacity = cap;
+    na->size = 0;
 }
 
 /**
@@ -389,6 +394,13 @@ void initNodeArray(NodeArray *na, int cap) {
  * Why we made it: We want a dynamic list of BST nodes for sorting.
  */
 void addNode(NodeArray *na, PokemonNode *node) {
+    if (na == NULL || node == NULL)
+        return;
+    if (na->size == na->capacity) {
+        na->nodes = realloc(na->nodes, na->capacity * 2);
+        na->capacity *= 2;
+    }
+    na->nodes[na->size++] = node;
 }
 
 /**
@@ -476,6 +488,7 @@ void evolvePokemon(OwnerNode *owner) {
  * Why we made it: Primary user function for adding new Pokemon to an owner’s Pokedex.
  */
 void addPokemon(OwnerNode *owner) {
+
 }
 
 /**
