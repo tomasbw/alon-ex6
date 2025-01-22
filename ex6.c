@@ -490,13 +490,6 @@ void freePokemon(OwnerNode *owner) {
    7) Display Menu for a Pokedex
    ------------------------------------------------------------ */
 
-/**
- * @brief Show sub-menu to let user pick BFS, Pre, In, Post, or alphabetical.
- * @param owner pointer to Owner
- * Why we made it: We want a simple menu that picks from various traversals.
- */
-void displayMenu(OwnerNode *owner);
-
 /* ------------------------------------------------------------
    8) Sorting Owners (Bubble Sort on Circular List)
    ------------------------------------------------------------ */
@@ -506,6 +499,31 @@ void displayMenu(OwnerNode *owner);
  * Why we made it: Another demonstration of pointer manipulation + sorting logic.
  */
 void sortOwners(void) {
+
+    if (ownerHead == NULL || ownerHead->next == ownerHead) {
+        return;  // List is empty or has only one node
+    }
+
+    int swapped;
+    OwnerNode *cur;
+    OwnerNode *last = ownerHead->prev;  // Last node in the circular list
+
+    do {
+        swapped = 0;
+        cur = ownerHead;
+
+        while (cur != last) {
+            if (strcmp(cur->ownerName, cur->next->ownerName) > 0) {
+                swapOwnerData(cur, cur->next);
+                swapped = 1;
+            }
+            cur = cur->next;
+        }
+
+        // Move last one step back
+        last = last->prev;
+
+    } while (swapped);
 }
 
 /**
@@ -551,7 +569,25 @@ void linkOwnerInCircularList(OwnerNode *newOwner) {
  * @param target pointer to the OwnerNode
  * Why we made it: Deleting or merging owners requires removing them from the ring.
  */
-void removeOwnerFromCircularList(OwnerNode *target) {}
+void removeOwnerFromCircularList(OwnerNode *target) {
+
+    if (target == NULL || ownerHead == NULL) {
+        return;
+    }
+    if (target->next == target) {
+        ownerHead = NULL;
+    } else {
+        target->prev->next = target->next;
+        target->next->prev = target->prev;
+
+        // If the node to unlink is the head, update the head
+        if (target == ownerHead) {
+            ownerHead = target->next;
+        }
+    }
+    target->next = NULL;
+    target->prev = NULL;
+}
 
 /**
  * @brief Find an owner by name in the circular list.
@@ -559,7 +595,20 @@ void removeOwnerFromCircularList(OwnerNode *target) {}
  * @return pointer to the matching OwnerNode or NULL
  * Why we made it: We often need to locate an owner quickly.
  */
-OwnerNode *findOwnerByName(const char *name) {}
+OwnerNode *findOwnerByName(const char *name) {
+
+    if (ownerHead == NULL || name == NULL) {
+        return NULL;
+    }
+
+    OwnerNode *cur = ownerHead;
+    do {
+	    if (strcmp(cur->ownerName, name) == 0)
+            return cur;
+        cur = cur->next;
+    } while (cur->next != ownerHead);
+    return NULL;
+}
 
 /* ------------------------------------------------------------
    10) Owner Menus
@@ -609,7 +658,7 @@ void printOwnersCircular(void) {
     do {
         printf("%d. %s\n", cnt++, cur->ownerName);
         cur = cur->next;
-    } while (cur->next != ownerHead);
+    } while (cur != ownerHead);
 }
 
 
