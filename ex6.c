@@ -296,6 +296,53 @@ void freeOwnerNode(OwnerNode *owner) {
    3) BST Insert, Search, Remove
    ------------------------------------------------------------ */
 
+/* Implement Simple FIFO using queue for BFS */
+
+typedef struct QueueNode {
+    PokemonNode* data;
+    struct QueueNode* next;
+} QueueNode;
+
+typedef struct {
+    QueueNode *front;
+    QueueNode *rear;
+} Queue;
+
+// Queue operations
+Queue* createQueue(void) {
+    Queue* q = (Queue*)malloc(sizeof(Queue));
+    q->front = q->rear = NULL;
+    return q;
+}
+
+void enqueue(Queue* q, PokemonNode* node) {
+    QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
+    newNode->data = node;
+    newNode->next = NULL;
+    if (q->rear == NULL) {
+        q->front = q->rear = newNode;
+        return;
+    }
+    q->rear->next = newNode;
+    q->rear = newNode;
+}
+
+PokemonNode* dequeue(Queue* q) {
+    if (q->front == NULL)
+        return NULL;
+
+    QueueNode* temp = q->front;
+    PokemonNode* node = temp->data;
+
+    q->front = q->front->next;
+
+    if (q->front == NULL)
+        q->rear = NULL;
+
+    free(temp);
+    return node;
+}
+
 /**
  * @brief Insert a PokemonNode into BST by ID; duplicates freed.
  * @param root pointer to BST root
@@ -334,47 +381,11 @@ PokemonNode *insertPokemonNode(PokemonNode *root, PokemonNode *newNode) {
  * Why we made it: BFS ensures we find nodes even in an unbalanced tree.
  */
 // Queue structure for BFS
-typedef struct QueueNode {
-    PokemonNode* data;
-    struct QueueNode* next;
-} QueueNode;
-
-typedef struct {
-    QueueNode *front, *rear;
-} Queue;
-
-// Queue operations
-Queue* createQueue() {
-    Queue* q = (Queue*)malloc(sizeof(Queue));
-    q->front = q->rear = NULL;
-    return q;
-}
-
-void enqueue(Queue* q, PokemonNode* node) {
-    QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
-    newNode->data = node;
-    newNode->next = NULL;
-    if (q->rear == NULL) {
-        q->front = q->rear = newNode;
-        return;
-    }
-    q->rear->next = newNode;
-    q->rear = newNode;
-}
-
-PokemonNode* dequeue(Queue* q) {
-    if (q->front == NULL) return NULL;
-    QueueNode* temp = q->front;
-    PokemonNode* node = temp->data;
-    q->front = q->front->next;
-    if (q->front == NULL) q->rear = NULL;
-    free(temp);
-    return node;
-}
-
 PokemonNode *searchPokemonBFS(PokemonNode *root, int id) {
-    if (root == NULL)
-	return NULL;
+
+    if (root == NULL) {
+        return NULL;
+    }
 
     Queue* q = createQueue();
     enqueue(q, root);
@@ -385,8 +396,10 @@ PokemonNode *searchPokemonBFS(PokemonNode *root, int id) {
             free(q);
             return current;
         }
-        if (current->left) enqueue(q, current->left);
-        if (current->right) enqueue(q, current->right);
+        if (current->left)
+            enqueue(q, current->left);
+        if (current->right)
+            enqueue(q, current->right);
     }
 
     free(q);
@@ -408,8 +421,9 @@ PokemonNode* findMin(PokemonNode* node) {
  */
 PokemonNode *removeNodeBST(PokemonNode *root, int id) {
 
-	if (root == NULL)
+    if (root == NULL) {
         return root;
+    }
 
     if (id < root->data->id)
         root->left = removeNodeBST(root->left, id);
@@ -443,6 +457,11 @@ PokemonNode *removeNodeBST(PokemonNode *root, int id) {
  * Why we made it: BFS confirms existence, then removeNodeBST does the removal.
  */
 PokemonNode *removePokemonByID(PokemonNode *root, int id) {
+
+    if (searchPokemonBFS(root, id))
+        root = removeNodeBST(root, id);
+
+    return root;
 }
 
 /* ------------------------------------------------------------
@@ -460,6 +479,26 @@ PokemonNode *removePokemonByID(PokemonNode *root, int id) {
  * Why we made it: BFS plus function pointers => flexible traversal.
  */
 void BFSGeneric(PokemonNode *root, VisitNodeFunc visit) {
+
+    if (root == NULL)
+        return;
+
+    Queue* q = createQueue();
+    enqueue(q, root);
+
+    while (q->front != NULL) {
+        PokemonNode* current = dequeue(q);
+
+        // Call the visit function on the current node
+        visit(current);
+
+        if (current->left)
+            enqueue(q, current->left);
+        if (current->right)
+            enqueue(q, current->right);
+    }
+
+    free(q);
 }
 
 /**
@@ -469,6 +508,16 @@ void BFSGeneric(PokemonNode *root, VisitNodeFunc visit) {
  * Why we made it: Another demonstration of function-pointer-based traversal.
  */
 void preOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
+
+    if (root == NULL) {
+        return;
+    }
+
+    visit(root);
+
+    preOrderGeneric(root->left, visit);
+
+    preOrderGeneric(root->right, visit);
 }
 
 /**
@@ -478,6 +527,17 @@ void preOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
  * Why we made it: Great for seeing sorted order if BST is sorted by ID.
  */
 void inOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
+
+    if (root == NULL) {
+        return;
+    }
+
+
+    preOrderGeneric(root->left, visit);
+
+    visit(root);
+
+    preOrderGeneric(root->right, visit);
 }
 
 /**
@@ -487,6 +547,17 @@ void inOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
  * Why we made it: Another standard traversal pattern.
  */
 void postOrderGeneric(PokemonNode *root, VisitNodeFunc visit) {
+
+    if (root == NULL) {
+        return;
+    }
+
+
+    preOrderGeneric(root->left, visit);
+
+    preOrderGeneric(root->right, visit);
+
+    visit(root);
 }
 
 /* ------------------------------------------------------------
@@ -533,6 +604,14 @@ void addNode(NodeArray *na, PokemonNode *node) {
  * Why we made it: We gather everything for qsort.
  */
 void collectAll(PokemonNode *root, NodeArray *na)  {
+
+    if (root == NULL)
+        return;
+
+    collectAll(root->left, na);
+    addNode(na, root);
+    collectAll(root->right, na);
+
 }
 
 /**
@@ -543,6 +622,13 @@ void collectAll(PokemonNode *root, NodeArray *na)  {
  * Why we made it: Sorting by name for alphabetical display.
  */
 int compareByNameNode(const void *a, const void *b) {
+
+   PokemonNode *pokemonA = *(PokemonNode **)a;
+   PokemonNode *pokemonB = *(PokemonNode **)b;
+
+   /* retunrs negatie or positive not just -1 or 1, but this should be okay for qsort */
+   return strcmp(pokemonA->data->name, pokemonB->data->name);
+    
 }
 
 /**
@@ -551,6 +637,16 @@ int compareByNameNode(const void *a, const void *b) {
  * Why we made it: Provide user the option to see Pokemon sorted by name.
  */
 void displayAlphabetical(PokemonNode *root) {
+    NodeArray na;
+    initNodeArray(&na, 50);
+    collectAll(root, &na);
+    for (int i = 0; i < na.size; i++) {
+        printPokemonNode(na.nodes[i]);            
+    }
+    qsort(na.nodes,  na.size, sizeof(PokemonNode *), compareByNameNode);
+    for (int i = 0; i < na.size; i++) {
+        printPokemonNode(na.nodes[i]);            
+    }
 }
 
 /**
@@ -559,6 +655,8 @@ void displayAlphabetical(PokemonNode *root) {
  * Why we made it: Quick listing in BFS order.
  */
 void displayBFS(PokemonNode *root) {
+
+    BFSGeneric(root, printPokemonNode);
 }
 
 /**
@@ -568,13 +666,8 @@ void displayBFS(PokemonNode *root) {
  */
 void preOrderTraversal(PokemonNode *root) {
 
-    if (!root)
-        return;
+    preOrderGeneric(root, printPokemonNode);
 
-    printPokemonNode(root);
-
-    inOrderTraversal(root->left);
-    inOrderTraversal(root->right);
 }
 
 /**
@@ -583,15 +676,7 @@ void preOrderTraversal(PokemonNode *root) {
  * Why we made it: Good for sorted output by ID if the tree is a BST.
  */
 void inOrderTraversal(PokemonNode *root) {
-
-    if (!root)
-        return;
-
-    inOrderTraversal(root->left);
-
-    printPokemonNode(root);
-
-    inOrderTraversal(root->right);
+    inOrderGeneric(root, printPokemonNode);
 }
 
 /**
@@ -600,25 +685,54 @@ void inOrderTraversal(PokemonNode *root) {
  * Why we made it: Another standard traversal pattern.
  */
 void postOrderTraversal(PokemonNode *root) {
-
-    if (!root)
-        return;
-    postOrderTraversal(root->left);
-    postOrderTraversal(root->right);
-
-    printPokemonNode(root);
+    postOrderGeneric(root, printPokemonNode);
 }
 
 /* ------------------------------------------------------------
    6) Pokemon-Specific
    ------------------------------------------------------------ */
 
+static float pokemonCalcStregth(PokemonData *data) {
+    return data->hp * 1.2 + data->attack * 1.5;
+}
 /**
  * @brief Let user pick two Pokemon by ID in the same Pokedex to fight.
  * @param owner pointer to the Owner
  * Why we made it: Fun demonstration of BFS and custom formula for battles.
  */
 void pokemonFight(OwnerNode *owner) {
+
+    if (!owner)
+        return;
+
+    PokemonNode *root = owner->pokedexRoot;
+    if (root == NULL) {
+        printf("Pokedex is empty.");
+    }
+
+    int choice1 = readIntSafe("Enter ID of the first Pokemon: ");
+    int choice2 = readIntSafe("Enter ID of the second Pokemon: ");
+
+    PokemonNode *pokemon1 = searchPokemonBFS(root, choice1); 
+    PokemonNode *pokemon2 = searchPokemonBFS(root, choice2);
+
+    if (pokemon1 == NULL || pokemon2 == NULL) {
+        printf("One or both Pokemon IDs not found.");
+        return;
+    }
+
+    float strength1 = pokemonCalcStregth(pokemon1->data);
+    float strength2 = pokemonCalcStregth(pokemon2->data);
+    printf("Pokemon 1: %s (Score = %f)",pokemon1->data->name, strength1);
+    printf("Pokemon 2: %s (Score = %f)",pokemon2->data->name, strength2);
+    if (strength1 > strength2) {
+        printf("%s wins!", pokemon1->data->name);
+    } else if(strength1 < strength2) {
+        printf("%s wins!", pokemon2->data->name);
+    }
+    else {
+        printf("It’s a tie!");
+    }
 }
 
 /**
@@ -627,6 +741,22 @@ void pokemonFight(OwnerNode *owner) {
  * Why we made it: Demonstrates removing an old ID, inserting the next ID.
  */
 void evolvePokemon(OwnerNode *owner) {
+
+    if (!owner)
+        return;
+
+    if (owner->pokedexRoot == NULL) {
+        printf("Pokedex is empty.");
+    }
+
+    int choice = readIntSafe("Enter ID of Pokemon to evolve: ");
+    PokemonNode *pokemon = searchPokemonBFS(owner->pokedexRoot, choice);
+    if (!pokemon)
+        return;
+    if (pokemon->data->CAN_EVOLVE) {
+        owner->pokedexRoot = removeNodeBST(owner->pokedexRoot, choice);
+        owner->pokedexRoot = insertPokemonNode(owner->pokedexRoot, createPokemonNode(&pokedex[choice]));
+    }
 }
 
 /**
@@ -635,7 +765,16 @@ void evolvePokemon(OwnerNode *owner) {
  * Why we made it: Primary user function for adding new Pokemon to an owner’s Pokedex.
  */
 void addPokemon(OwnerNode *owner) {
+    if (!owner)
+        return;
+
     int choice = readIntSafe("Enter ID to add: ");
+    if (choice < 1 && choice > 151)
+        return;
+    PokemonNode *pokemon = searchPokemonBFS(owner->pokedexRoot, choice);
+    if (pokemon)
+        return;
+    owner->pokedexRoot = insertPokemonNode(owner->pokedexRoot, createPokemonNode(&pokedex[choice - 1]));
 }
 
 /**
@@ -645,6 +784,7 @@ void addPokemon(OwnerNode *owner) {
  */
 void freePokemon(OwnerNode *owner) {
     int choice = readIntSafe("Enter Pokemon ID to release: ");
+    owner->pokedexRoot = removePokemonByID(owner->pokedexRoot, choice);
 }
 
 /* ------------------------------------------------------------
@@ -766,7 +906,7 @@ OwnerNode *findOwnerByName(const char *name) {
     do {
         if (strcmp(cur->ownerName, name) == 0) {
             return cur;
-	}
+    }
         cur = cur->next;
     } while (cur->next != ownerHead);
     return NULL;
