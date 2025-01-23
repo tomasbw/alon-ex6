@@ -358,9 +358,9 @@ PokemonNode *insertPokemonNode(PokemonNode *root, PokemonNode *newNode) {
         return newNode;
     }
 
-    // If the ID already exists, don't insert (no duplicates allowed)
+    // If the ID already exists, don't insert (no duplicates allowed) and free the Node.
     if (newNode->data->id == root->data->id) {
-        printf("Pokemon with ID %d already exists. Duplicate not allowed.\n", newNode->data->id);
+        freePokemonNode(newNode);
         return root;
     }
 
@@ -701,7 +701,7 @@ void postOrderTraversal(PokemonNode *root) {
    6) Pokemon-Specific
    ------------------------------------------------------------ */
 
-static float pokemonCalcStregth(PokemonData *data) {
+static float pokemonCalcStregth(const PokemonData *data) {
     return data->hp * 1.2 + data->attack * 1.5;
 }
 /**
@@ -988,11 +988,60 @@ void deletePokedex(void) {
     printf("Pokedex deleted.");
 }
 
+PokemonNode *mergePokedex(PokemonNode *pokedexIn, PokemonNode *pokedexOut) {
+
+    if (pokedexOut == NULL)
+        return NULL;
+
+    Queue* q = createQueue();
+    enqueue(q, pokedexOut);
+
+    while (q->front != NULL) {
+        PokemonNode* current = dequeue(q);
+
+        // Call the visit function on the current node
+        pokedexIn = insertPokemonNode(pokedexIn, createPokemonNode(current->data));
+
+        if (current->left)
+            enqueue(q, current->left);
+        if (current->right)
+            enqueue(q, current->right);
+    }
+
+    free(q);
+
+    return pokedexIn;
+
+}
+
+
 /**
  * @brief Merge the second owner's Pokedex into the first, then remove the second owner.
  * Why we made it: BFS copy demonstration plus removing an owner.
  */
-void mergePokedexMenu(void) {}
+void mergePokedexMenu(void) {
+
+    printf("=== Merge a Pokedex menu ===\n");
+    printf("Enter name of first owner: ");
+    char* nameIn = getDynamicInput();
+    printf("Enter name of second owner: ");
+    char* nameOut = getDynamicInput();
+    OwnerNode *ownerIn = findOwnerByName(nameIn);
+    OwnerNode *ownerOut = findOwnerByName(nameOut);
+    if (ownerIn == NULL || ownerOut == NULL) {
+        printf("Cannot find owners\n");
+    }
+    printf("Merging %s and %s...\n", nameIn, nameOut);
+
+    ownerIn->pokedexRoot = mergePokedex(ownerIn->pokedexRoot, ownerOut->pokedexRoot);
+    printf("Merge completed.\n");
+    removeOwnerFromCircularList(ownerOut);
+    freeOwnerNode(ownerOut);
+    printf("Owner '%s' has been removed after merging\n", nameOut);
+    free(nameIn);
+    free(nameOut);
+
+}
 
 /* ------------------------------------------------------------
    11) Printing Owners in a Circle
