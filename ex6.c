@@ -975,9 +975,16 @@ void openPokedexMenu(void) {
 
     printf("Your name: ");
     char *ownerName = getDynamicInput();
+    if (findOwnerByName(ownerName)) {
+	printf("Owner '%s' already exists. Not creating a new Pokedex.\n", ownerName);
+	free(ownerName);
+	return;
+    }
     int starter = readIntSafe("Choose Starter:\n1. Bulbasaur\n2. Charmander\n3. Squirtle\n");
-    OwnerNode* newOwner = createOwner(ownerName, createPokemonNode(&pokedex[3 * (starter - 1)]));
+    const PokemonData *data =  &pokedex[3 * (starter - 1)];
+    OwnerNode* newOwner = createOwner(ownerName, createPokemonNode(data));
     linkOwnerInCircularList(newOwner);
+    printf("New Pokedex created for %s with starter %s.\n", ownerName, data->name);
 }
 
 /**
@@ -986,7 +993,7 @@ void openPokedexMenu(void) {
  */
 void deletePokedex(void) {
 
-    printf("=== Delete a Pokedex ===");
+    printf("=== Delete a Pokedex ===\n");
     int cnt = printAndCountOwners();
     int choice = readIntSafe("Choose a Pokedex to delete by number: ");
     if (choice > cnt)
@@ -994,10 +1001,10 @@ void deletePokedex(void) {
     OwnerNode *owner = findOwnerByNum(choice);
     if (!owner)
         return;
-    printf("Deleting %s's entire Pokedex...", owner->ownerName);
+    printf("Deleting %s's entire Pokedex...\n", owner->ownerName);
     freePokemonTree(owner->pokedexRoot);
     owner->pokedexRoot = NULL;
-    printf("Pokedex deleted.");
+    printf("Pokedex deleted.\n");
 }
 
 PokemonNode *mergePokedex(PokemonNode *pokedexIn, PokemonNode *pokedexOut) {
