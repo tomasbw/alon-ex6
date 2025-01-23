@@ -1042,6 +1042,7 @@ void mergePokedexMenu(void) {
     OwnerNode *ownerOut = findOwnerByName(nameOut);
     if (ownerIn == NULL || ownerOut == NULL) {
         printf("Cannot find owners\n");
+	return;
     }
     printf("Merging %s and %s...\n", nameIn, nameOut);
 
