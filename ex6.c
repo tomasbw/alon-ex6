@@ -639,7 +639,6 @@ int compareByNameNode(const void *a, const void *b) {
 
    /* retunrs negatie or positive not just -1 or 1, but this should be okay for qsort */
    return strcmp(pokemonA->data->name, pokemonB->data->name);
-    
 }
 
 /**
@@ -653,7 +652,7 @@ void displayAlphabetical(PokemonNode *root) {
     collectAll(root, &na);
     qsort(na.nodes,  na.size, sizeof(PokemonNode *), compareByNameNode);
     for (int i = 0; i < na.size; i++) {
-        printPokemonNode(na.nodes[i]);            
+        printPokemonNode(na.nodes[i]);
     }
     destroyNodeArray(&na);
 }
@@ -724,7 +723,7 @@ void pokemonFight(OwnerNode *owner) {
     int choice1 = readIntSafe("Enter ID of the first Pokemon: ");
     int choice2 = readIntSafe("Enter ID of the second Pokemon: ");
 
-    PokemonNode *pokemon1 = searchPokemonBFS(root, choice1); 
+    PokemonNode *pokemon1 = searchPokemonBFS(root, choice1);
     PokemonNode *pokemon2 = searchPokemonBFS(root, choice2);
 
     if (pokemon1 == NULL || pokemon2 == NULL) {
@@ -769,6 +768,9 @@ void evolvePokemon(OwnerNode *owner) {
     if (pokemon->data->CAN_EVOLVE) {
         owner->pokedexRoot = removeNodeBST(owner->pokedexRoot, choice);
         owner->pokedexRoot = insertPokemonNode(owner->pokedexRoot, createPokemonNode(&pokedex[choice]));
+        printf("Pokemon evolved from %s (ID %d) to %s (ID %d).\n",
+	            pokedex[choice - 1].name, choice,
+	            pokedex[choice].name, choice + 1);
     }
 }
 
@@ -871,7 +873,7 @@ void swapOwnerData(OwnerNode *a, OwnerNode *b) {
  * @param newOwner pointer to newly created OwnerNode
  * Why we made it: We need a standard approach to keep the list circular.
  */
-void linkOwnerInCircularList(OwnerNode *newOwner) { 
+void linkOwnerInCircularList(OwnerNode *newOwner) {
 
     if (ownerHead == NULL) {
         ownerHead = newOwner;
@@ -949,7 +951,7 @@ int printAndCountOwners(void) {
 }
 
 OwnerNode *findOwnerByNum(int choice) {
- 
+
     OwnerNode *cur = ownerHead;
     int cnt = 1;
     while (cnt++ < choice) {
@@ -973,7 +975,7 @@ void openPokedexMenu(void) {
 
     printf("Your name: ");
     char *ownerName = getDynamicInput();
-    int starter = readIntSafe("Choose Starter:\n1. Bulbasaur \n2. Charmander \n3. Squirtle\n");
+    int starter = readIntSafe("Choose Starter:\n1. Bulbasaur\n2. Charmander\n3. Squirtle\n");
     OwnerNode* newOwner = createOwner(ownerName, createPokemonNode(&pokedex[3 * (starter - 1)]));
     linkOwnerInCircularList(newOwner);
 }
