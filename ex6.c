@@ -711,8 +711,10 @@ static float pokemonCalcStregth(const PokemonData *data) {
  */
 void pokemonFight(OwnerNode *owner) {
 
-    if (!owner)
+    if (!owner) {
+        printf("Pokedex is empty.");
         return;
+    }
 
     PokemonNode *root = owner->pokedexRoot;
     if (root == NULL) {
@@ -760,8 +762,10 @@ void evolvePokemon(OwnerNode *owner) {
 
     int choice = readIntSafe("Enter ID of Pokemon to evolve: ");
     PokemonNode *pokemon = searchPokemonBFS(owner->pokedexRoot, choice);
-    if (!pokemon)
+    if (!pokemon) {
+	printf("No Pokemon with ID %d found.\n", choice);
         return;
+    }
     if (pokemon->data->CAN_EVOLVE) {
         owner->pokedexRoot = removeNodeBST(owner->pokedexRoot, choice);
         owner->pokedexRoot = insertPokemonNode(owner->pokedexRoot, createPokemonNode(&pokedex[choice]));
@@ -792,7 +796,13 @@ void addPokemon(OwnerNode *owner) {
  * Why we made it: Another user function for releasing a Pokemon.
  */
 void freePokemon(OwnerNode *owner) {
+
+    if (!owner->pokedexRoot) {
+        printf("No Pokemon to release.\n");
+    }
+
     int choice = readIntSafe("Enter Pokemon ID to release: ");
+
     owner->pokedexRoot = removePokemonByID(owner->pokedexRoot, choice);
 }
 
