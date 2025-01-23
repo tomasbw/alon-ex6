@@ -288,6 +288,7 @@ void freePokemonTree(PokemonNode *root) {
 void freeOwnerNode(OwnerNode *owner) {
     free(owner->ownerName);
     freePokemonTree(owner->pokedexRoot);
+    owner->pokedexRoot = NULL;
     free(owner);
 }
 
@@ -577,8 +578,18 @@ void initNodeArray(NodeArray *na, int cap) {
     }
 
     na->nodes = calloc(cap, sizeof(PokemonNode*));
+    if (!na->nodes)
+	return;
     na->capacity = cap;
     na->size = 0;
+}
+
+void destroyNodeArray(NodeArray *na) {
+     if (na->nodes)
+        free(na->nodes);
+     na->nodes = NULL;
+     na->capacity = 0;
+     na->size = 0;
 }
 
 /**
@@ -640,13 +651,11 @@ void displayAlphabetical(PokemonNode *root) {
     NodeArray na;
     initNodeArray(&na, 50);
     collectAll(root, &na);
-    for (int i = 0; i < na.size; i++) {
-        printPokemonNode(na.nodes[i]);            
-    }
     qsort(na.nodes,  na.size, sizeof(PokemonNode *), compareByNameNode);
     for (int i = 0; i < na.size; i++) {
         printPokemonNode(na.nodes[i]);            
     }
+    destroyNodeArray(&na);
 }
 
 /**
@@ -964,6 +973,7 @@ void openPokedexMenu(void) {
  * Why we made it: Let user pick which Pokedex to remove and free everything.
  */
 void deletePokedex(void) {
+
     printf("=== Delete a Pokedex ===");
     int cnt = printAndCountOwners();
     int choice = readIntSafe("Choose a Pokedex to delete by number: ");
@@ -974,6 +984,7 @@ void deletePokedex(void) {
         return;
     printf("Deleting %s's entire Pokedex...", owner->ownerName);
     freePokemonTree(owner->pokedexRoot);
+    owner->pokedexRoot = NULL;
     printf("Pokedex deleted.");
 }
 
@@ -992,6 +1003,27 @@ void mergePokedexMenu(void) {}
  * Why we made it: Demonstrates stepping through a circular list in a chosen direction.
  */
 void printOwnersCircular(void) {
+
+    OwnerNode *cur = ownerHead;
+    if (!cur)
+		return;
+
+    printf("Enter direction (F or B): ");
+    char direct = '\0';
+    scanf("%c", &direct);
+    int count = readIntSafe("How many prints? ");
+
+    if (direct == 'F' || direct == 'f') {
+        for (int i = 1; i <= count; i++) {
+            printf("[%d] %s", i, cur->ownerName);
+			cur = cur->next;
+		}
+	} else if (direct == 'B' || direct == 'b') {
+        for (int i = 1; i <= count; i++) {
+            printf("[%d] %s", i, cur->ownerName);
+			cur = cur->prev;
+		}
+	}
 }
 
 /* ------------------------------------------------------------

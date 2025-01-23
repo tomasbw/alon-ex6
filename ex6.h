@@ -254,6 +254,12 @@ typedef struct
 void initNodeArray(NodeArray *na, int cap);
 
 /**
+ * @brief free memory allocated in NodeArray
+ * @param na pointer to NodeArray
+ */
+void destroyNodeArray(NodeArray *na);
+
+/**
  * @brief Add a PokemonNode pointer to NodeArray, realloc if needed.
  * @param na pointer to NodeArray
  * @param node pointer to the node
